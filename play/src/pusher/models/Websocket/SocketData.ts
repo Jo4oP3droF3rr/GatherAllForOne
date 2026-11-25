@@ -75,6 +75,8 @@ export type ConnectingSocketData = {
     // The abort controllers for each queries received
     queryAbortControllers: Map<number, AbortController>;
     canRecord: boolean;
+    // Name imposed by the server (code login with LOGIN_USERS): the name sent by the client is ignored
+    forcedName?: string;
 };
 
 export type SocketData = ConnectingSocketData & {

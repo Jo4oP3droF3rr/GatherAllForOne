@@ -9,6 +9,12 @@ const login: DeepPartial<Translation["login"]> = {
             tooLongError: "Der Name ist zu lang",
             notValidError: "Der Name ist ungültig",
         },
+        code: {
+            placeholder: "Gib deinen Code ein",
+            empty: "Der Code ist leer",
+            invalid: "Ungültiger Code",
+            tooManyAttempts: "Zu viele Versuche. Bitte warte ein paar Minuten und versuche es erneut.",
+        },
     },
     genericError: "Ein Fehler ist aufgetreten",
     terms: "Wenn du fortfährst, akzeptierst du die {links}.",

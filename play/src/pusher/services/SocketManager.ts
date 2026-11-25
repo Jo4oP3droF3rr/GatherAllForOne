@@ -410,7 +410,7 @@ export class SocketManager implements ZoneEventListener {
         const message = noUndefined(joinRoomFrontMessage);
 
         socketData.viewport = message.viewportMessage;
-        socketData.name = message.name;
+        socketData.name = socketData.forcedName ?? message.name;
         socketData.availabilityStatus = message.availabilityStatus;
 
         const streamToBack = socketData.backConnection;

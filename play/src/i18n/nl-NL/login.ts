@@ -9,6 +9,12 @@ const login: DeepPartial<Translation["login"]> = {
             tooLongError: "Naam is te lang",
             notValidError: "Onjuist naamformaat",
         },
+        code: {
+            placeholder: "Voer je code in",
+            empty: "De code is leeg",
+            invalid: "Ongeldige code",
+            tooManyAttempts: "Te veel pogingen. Wacht een paar minuten en probeer het opnieuw.",
+        },
     },
     genericError: "Er is een fout opgetreden",
     terms: "Door door te gaan, ga je akkoord met onze {links}.",

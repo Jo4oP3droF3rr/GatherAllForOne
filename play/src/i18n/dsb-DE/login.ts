@@ -10,6 +10,12 @@ const login: DeepPartial<Translation["login"]> = {
             tooLongError: "Mě jo pśeliš dłujke",
             notValidError: "Mě njejo płaśece",
         },
+        code: {
+            placeholder: "Zapódaj swój kod",
+            empty: "Kod jo prozny",
+            invalid: "Njepłaśiwy kod",
+            tooManyAttempts: "Pśewjele wopytow. Pócakaj pár minutow a wopytaj hyšći raz.",
+        },
     },
     terms: "Jolic až kliknjoš na 'dalej', akceptěrujoš {links}.",
     termsOfUse: "Wustawki wužywanja",

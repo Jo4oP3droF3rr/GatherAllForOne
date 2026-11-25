@@ -9,6 +9,12 @@ const login: DeepPartial<Translation["login"]> = {
             tooLongError: "الاسم طويل جدًا", // The name is too long
             notValidError: "الاسم غير صالح", // The name is invalid
         },
+        code: {
+            placeholder: "أدخل رمزك",
+            empty: "الرمز فارغ",
+            invalid: "رمز غير صالح",
+            tooManyAttempts: "محاولات كثيرة جدًا. يرجى الانتظار بضع دقائق والمحاولة مرة أخرى.",
+        },
     },
     genericError: "حدث خطأ", // An error occurred
     terms: "بالمتابعة، فإنك تقبل {links}.", // By continuing, you accept the {links}.

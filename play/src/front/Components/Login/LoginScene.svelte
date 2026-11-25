@@ -2,7 +2,9 @@
     import type { Game } from "../../Phaser/Game/Game";
     import type { LoginScene } from "../../Phaser/Login/LoginScene";
     import { LoginSceneName } from "../../Phaser/Login/LoginScene";
-    import { MAX_USERNAME_LENGTH } from "../../Enum/EnvironmentVariable";
+    import { CODE_LOGIN_ENABLED, MAX_USERNAME_LENGTH } from "../../Enum/EnvironmentVariable";
+    import { connectionManager } from "../../Connection/ConnectionManager";
+    import { InvalidLoginCodeError, TooManyLoginAttemptsError } from "../../Exception/CodeLoginError";
     import logoImg from "../images/logo.svg";
     import poweredByWorkAdventureImg from "../images/Powered_By_WorkAdventure_Big.png";
     import bgMap from "../images/map-exemple.webp";
@@ -19,7 +21,8 @@
 
     let loginScene = $derived(game.scene.getScene(LoginSceneName) as LoginScene);
 
-    let name = $state(gameManager.getPlayerName() || "");
+    // With the code login (LOGIN_USERS), the user types their personal code and the name comes from the server
+    let name = $state(CODE_LOGIN_ENABLED ? "" : gameManager.getPlayerName() || "");
     let startValidating = $state(false);
     let errorName = $state("");
 
@@ -71,6 +74,11 @@
     async function submit() {
         startValidating = true;
 
+        if (CODE_LOGIN_ENABLED) {
+            await submitCode();
+            return;
+        }
+
         let finalName = name.trim();
         if (finalName !== "") {
             try {
@@ -84,6 +92,26 @@
                     errorName = $LL.login.genericError();
                     throw err;
                 }
+            }
+        }
+    }
+
+    async function submitCode() {
+        const code = name.trim();
+        if (code === "") {
+            return;
+        }
+        try {
+            const username = await connectionManager.codeLogin(code);
+            await loginScene.login(username);
+        } catch (err) {
+            if (err instanceof InvalidLoginCodeError) {
+                errorName = $LL.login.input.code.invalid();
+            } else if (err instanceof TooManyLoginAttemptsError) {
+                errorName = $LL.login.input.code.tooManyAttempts();
+            } else {
+                errorName = $LL.login.genericError();
+                throw err;
             }
         }
     }
@@ -119,27 +147,50 @@
 >
     <div class="w-full sm:w-96 md:w-10/12 lg:w-1/2 xl:w-1/3 rounded mx-auto text-center p-8">
         <section class="text-center flex h-fit flex-col justify-center items-center mb-0">
-            <span class="text-white text-lg bold">
-                {$LL.login.input.name.placeholder()}
-            </span>
-            <!-- svelte-ignore a11y_autofocus -->
-            <input
-                type="text"
-                name="fname"
-                data-testid="loginSceneNameInput"
-                placeholder={$LL.login.input.name.placeholder()}
-                class="w-52 md:w-96 h-12 text text-center bg-contrast rounded border border-solid border-white/20 mt-4 mb-0"
-                autofocus
-                maxlength={MAX_USERNAME_LENGTH}
-                bind:value={name}
-                onkeypress={() => {
-                    startValidating = true;
-                }}
-                class:border-danger={(name.trim() === "" && startValidating) || errorName !== ""}
-            />
+            {#if CODE_LOGIN_ENABLED}
+                <span class="text-white text-lg bold">
+                    {$LL.login.input.code.placeholder()}
+                </span>
+                <!-- svelte-ignore a11y_autofocus -->
+                <input
+                    type="password"
+                    name="accessCode"
+                    autocomplete="off"
+                    data-testid="loginSceneCodeInput"
+                    placeholder={$LL.login.input.code.placeholder()}
+                    class="w-52 md:w-96 h-12 text text-center bg-contrast rounded border border-solid border-white/20 mt-4 mb-0"
+                    autofocus
+                    maxlength={200}
+                    bind:value={name}
+                    oninput={() => {
+                        startValidating = true;
+                        errorName = "";
+                    }}
+                    class:border-danger={(name.trim() === "" && startValidating) || errorName !== ""}
+                />
+            {:else}
+                <span class="text-white text-lg bold">
+                    {$LL.login.input.name.placeholder()}
+                </span>
+                <!-- svelte-ignore a11y_autofocus -->
+                <input
+                    type="text"
+                    name="fname"
+                    data-testid="loginSceneNameInput"
+                    placeholder={$LL.login.input.name.placeholder()}
+                    class="w-52 md:w-96 h-12 text text-center bg-contrast rounded border border-solid border-white/20 mt-4 mb-0"
+                    autofocus
+                    maxlength={MAX_USERNAME_LENGTH}
+                    bind:value={name}
+                    onkeypress={() => {
+                        startValidating = true;
+                    }}
+                    class:border-danger={(name.trim() === "" && startValidating) || errorName !== ""}
+                />
+            {/if}
             {#if (name.trim() === "" && startValidating) || errorName !== ""}
                 <p class="err text-xs text-danger italic pt-2 mb-0">
-                    {#if errorName}{errorName}{:else}{$LL.login.input.name.empty()}{/if}
+                    {#if errorName}{errorName}{:else if CODE_LOGIN_ENABLED}{$LL.login.input.code.empty()}{:else}{$LL.login.input.name.empty()}{/if}
                 </p>
             {/if}
         </section>

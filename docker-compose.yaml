@@ -102,6 +102,7 @@ services:
       MAP_STORAGE_API_TOKEN: "FFVSGBSGBSGFB23SFGBSFG4BS"
       API_URL: back:50051
       DISABLE_ANONYMOUS: $DISABLE_ANONYMOUS
+      LOGIN_USERS: "${LOGIN_USERS:-}"
       #Map editor
       PUBLIC_MAP_STORAGE_URL: "http://map-storage.workadventure.localhost"
       INTERNAL_MAP_STORAGE_URL: "http://map-storage:3000"

@@ -23,6 +23,7 @@ export interface FrontConfigurationInterface {
     POSTHOG_API_KEY: string | undefined;
     POSTHOG_URL: string | undefined;
     DISABLE_ANONYMOUS: boolean;
+    CODE_LOGIN_ENABLED: boolean;
     ENABLE_OPENID: boolean;
     OPID_PROFILE_SCREEN_PROVIDER: string | undefined;
     ENABLE_CHAT_UPLOAD: boolean;

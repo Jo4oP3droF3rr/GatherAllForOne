@@ -9,6 +9,12 @@ const login: DeepPartial<Translation["login"]> = {
             tooLongError: "名字太長",
             notValidError: "名字格式不正確",
         },
+        code: {
+            placeholder: "請輸入您的代碼",
+            empty: "代碼為空",
+            invalid: "代碼無效",
+            tooManyAttempts: "嘗試次數過多。請稍候幾分鐘後再試。",
+        },
     },
     genericError: "發生錯誤",
     terms: "點選繼續，即表示你同意我們的{links}。",

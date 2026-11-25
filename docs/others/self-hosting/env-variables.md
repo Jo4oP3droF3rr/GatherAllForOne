@@ -52,6 +52,7 @@ Environment variables for the Play service (frontend and pusher).
 | `OPENID_WOKA_NAME_POLICY` | No | Policy for avatar naming: 'user_input', 'allow_override_opid', or 'force_opid' |
 | `OPENID_TAGS_CLAIM` | No | JWT claim containing user tags/roles |
 | `DISABLE_ANONYMOUS` | No | If true, anonymous users cannot access the platform. Defaults to false |
+| `LOGIN_USERS` | No | List of users allowed to log in with a personal code, in the form "code:Name;code:Name". When set, the name screen asks for the code instead, the name comes from this list and anonymous access is disabled. |
 | `PROMETHEUS_AUTHORIZATION_TOKEN` | No | The token to access the Prometheus metrics. |
 | `PROMETHEUS_PORT` | No | The port to access the Prometheus metrics. If not set, the default port is used AND an authorization token is required. |
 | `ENABLE_CHAT` | No | Enable/disable the chat feature. Defaults to true |

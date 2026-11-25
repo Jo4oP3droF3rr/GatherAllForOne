@@ -6,7 +6,7 @@
     import { derived, get } from "svelte/store";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { connectionManager } from "../../../Connection/ConnectionManager";
-    import { ENABLE_OPENID, SENTRY_DSN_FRONT } from "../../../Enum/EnvironmentVariable";
+    import { CODE_LOGIN_ENABLED, ENABLE_OPENID, SENTRY_DSN_FRONT } from "../../../Enum/EnvironmentVariable";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { EnableCameraScene, EnableCameraSceneName } from "../../../Phaser/Login/EnableCameraScene";
     import { LoginScene, LoginSceneName } from "../../../Phaser/Login/LoginScene";
@@ -62,7 +62,8 @@
     ];
 
     function showWokaNameMenuItem() {
-        return connectionManager.currentRoom?.opidWokaNamePolicy !== "force_opid";
+        // With the code login, the name comes from LOGIN_USERS
+        return !CODE_LOGIN_ENABLED && connectionManager.currentRoom?.opidWokaNamePolicy !== "force_opid";
     }
 
     function openEditNameScene() {
@@ -271,7 +272,7 @@
             </div>
         </button>
 
-        {#if ENABLE_OPENID && $userIsConnected}
+        {#if (ENABLE_OPENID && $userIsConnected) || CODE_LOGIN_ENABLED}
             <button
                 onclick={() => {
                     analyticsClient.trackAdminEvent("auth.logout_clicked");

@@ -29,7 +29,7 @@ import { errorScreenStore } from "../../Stores/ErrorScreenStore";
 import { pwaInstallProfileMenuEligibleStore, pwaInstallSceneVisibleStore } from "../../Stores/PwaInstallStore";
 import { hasCapability } from "../../Connection/Capabilities";
 import type { ChatConnectionInterface } from "../../Chat/Connection/ChatConnection";
-import { MATRIX_PUBLIC_URI } from "../../Enum/EnvironmentVariable";
+import { CODE_LOGIN_ENABLED, MATRIX_PUBLIC_URI } from "../../Enum/EnvironmentVariable";
 import { VoidChatConnection } from "../../Chat/Connection/VoidChatConnection";
 import { loginTokenErrorStore, isMatrixChatEnabledStore } from "../../Stores/ChatStore";
 import { initializeChatVisibilitySubscription } from "../../Chat/Stores/ChatStore";
@@ -193,7 +193,10 @@ export class GameManager {
 
         if (this.playerName && localUserStore.getAuthToken() && shouldShowPwaInstall) {
             return PwaInstallSceneName;
-        } else if (!this.playerName || (this.startRoom.authenticationMandatory && !localUserStore.getAuthToken())) {
+        } else if (
+            !this.playerName ||
+            ((this.startRoom.authenticationMandatory || CODE_LOGIN_ENABLED) && !localUserStore.getAuthToken())
+        ) {
             return LoginSceneName;
         } else if (nextScene === "selectCharacterScene") {
             return SelectCharacterSceneName;
