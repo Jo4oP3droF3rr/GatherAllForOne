@@ -51,6 +51,7 @@ if (typeof window !== "undefined" && window.env === undefined) {
         POSTHOG_API_KEY: undefined,
         POSTHOG_URL: undefined,
         DISABLE_ANONYMOUS: false,
+        CODE_LOGIN_ENABLED: false,
         ENABLE_OPENID: false,
         OPID_PROFILE_SCREEN_PROVIDER: undefined,
         ENABLE_CHAT_UPLOAD: false,

@@ -11,6 +11,7 @@ import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import type { FetchMemberDataByUuidResponse } from "../services/AdminApi";
 import type { AdminSocketTokenData } from "../services/JWTTokenManager";
 import { jwtTokenManager, tokenInvalidException } from "../services/JWTTokenManager";
+import { checkCodeLoginUser } from "../services/CodeLogin";
 import { socketManager } from "../services/SocketManager";
 import {
     ADMIN_SOCKETS_TOKEN,
@@ -319,6 +320,8 @@ export class IoSocketController {
                               : query.characterTextureIds;
 
                     const tokenData = token ? await jwtTokenManager.verifyJWTToken(token) : null;
+                    // With the code login, the user must (still) be in LOGIN_USERS, and gets the name of the list
+                    const codeLoginUser = checkCodeLoginUser(tokenData);
 
                     if (DISABLE_ANONYMOUS && !tokenData) {
                         throw new Error("Expecting token");
@@ -467,6 +470,7 @@ export class IoSocketController {
                         analyticsEventsEnabled: userData.analyticsEventsEnabled ?? true,
                         queryAbortControllers: new Map<number, AbortController>(),
                         canRecord: userData.canRecord ?? false,
+                        forcedName: codeLoginUser?.name,
                     };
 
                     /* This immediately calls open handler, you must not use res after this call */

@@ -5,6 +5,7 @@ import { MeResponse, ErrorScreenMessage } from "@workadventure/messages";
 import axios, { AxiosError, isAxiosError } from "axios";
 import { Subject } from "rxjs";
 import { asError } from "catch-unknown";
+import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 import axiosRetry, { exponentialDelay, isNetworkOrIdempotentRequestError } from "axios-retry";
 import { analyticsClient } from "../Administration/AnalyticsClient";
@@ -12,7 +13,8 @@ import { userIsConnected, warningBannerStore } from "../Stores/MenuStore";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
 import { _ServiceWorker } from "../Network/ServiceWorker";
 import { GameConnexionTypes, urlManager } from "../Url/UrlManager";
-import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
+import { CODE_LOGIN_ENABLED, ENABLE_OPENID } from "../Enum/EnvironmentVariable";
+import { InvalidLoginCodeError, TooManyLoginAttemptsError } from "../Exception/CodeLoginError";
 import { limitMapStore } from "../Stores/GameStore";
 import { showLimitRoomModalStore } from "../Stores/ModalStore";
 import { gameManager } from "../Phaser/Game/GameManager";
@@ -35,6 +37,12 @@ import type { OnConnectInterface } from "./ConnexionModels";
 import { RoomConnection } from "./RoomConnection";
 import { HtmlUtils } from "./../WebRtc/HtmlUtils";
 import { hasCapability } from "./Capabilities";
+
+const CodeLoginResponse = z.object({
+    authToken: z.string(),
+    userUuid: z.string(),
+    username: z.string(),
+});
 
 const connectionRetryBaseDelayMs = 1_000;
 const connectionRetryMaxDelayMs = 10_000;
@@ -244,7 +252,9 @@ class ConnectionManager {
             if (!this.authToken) {
                 const defaultWokaName = this._currentRoom.defaultWokaName;
 
-                if (!this._currentRoom.authenticationMandatory || defaultWokaName !== undefined) {
+                if (CODE_LOGIN_ENABLED) {
+                    // The LoginScene asks for the personal code (see codeLogin). No anonymous login.
+                } else if (!this._currentRoom.authenticationMandatory || defaultWokaName !== undefined) {
                     await this.anonymousLogin();
 
                     const characterTextures = localUserStore.getCharacterTextures();
@@ -301,7 +311,11 @@ class ConnectionManager {
                     if (isAxiosError(err) && err.response?.status === 401) {
                         console.warn("Token expired, trying to login anonymously");
                         // if the user must be connected to the current room or if the pusher error is not openid provider access error
-                        if (this._currentRoom.authenticationMandatory) {
+                        if (CODE_LOGIN_ENABLED) {
+                            // Expired token, or user removed from LOGIN_USERS: the LoginScene asks for the code again
+                            this.authToken = null;
+                            localUserStore.setAuthToken(null);
+                        } else if (this._currentRoom.authenticationMandatory) {
                             const redirect = this.loadOpenIDScreen(false);
                             if (redirect === null) {
                                 throw new Error("Unable to redirect on login page.", { cause: err });
@@ -366,6 +380,32 @@ class ConnectionManager {
             localUserStore.setAuthToken(this.authToken);
         }
         this.anonymousMatrixLogin();
+    }
+
+    /**
+     * Logs in with a personal code of the LOGIN_USERS list. Returns the name of the user, set in the list.
+     */
+    public async codeLogin(code: string): Promise<string> {
+        let data: unknown;
+        try {
+            data = (await axiosToPusher.post("codeLogin", { code })).data;
+        } catch (err) {
+            if (isAxiosError(err) && err.response?.status === 401) {
+                throw new InvalidLoginCodeError();
+            }
+            if (isAxiosError(err) && err.response?.status === 429) {
+                throw new TooManyLoginAttemptsError();
+            }
+            throw err;
+        }
+        const { authToken, userUuid, username } = CodeLoginResponse.parse(data);
+        this.localUser = new LocalUser(userUuid);
+        this.authToken = authToken;
+        localUserStore.saveUser(this.localUser);
+        localUserStore.setAuthToken(authToken);
+        localUserStore.setName(username);
+        this.anonymousMatrixLogin();
+        return username;
     }
 
     private anonymousMatrixLogin() {
@@ -599,7 +639,11 @@ class ConnectionManager {
         }
 
         const opidWokaNamePolicy = this.currentRoom?.opidWokaNamePolicy;
-        if (username != undefined && opidWokaNamePolicy != undefined) {
+        if (CODE_LOGIN_ENABLED && username != undefined) {
+            // The name comes from LOGIN_USERS: it follows the changes made in the list
+            gameManager.setPlayerName(username);
+            localUserStore.setName(username);
+        } else if (username != undefined && opidWokaNamePolicy != undefined) {
             if (hasCapability("api/save-name")) {
                 gameManager.setPlayerName(username);
             } else {

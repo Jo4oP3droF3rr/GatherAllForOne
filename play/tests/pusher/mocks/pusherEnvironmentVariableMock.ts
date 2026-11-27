@@ -45,6 +45,8 @@ export const OPID_LOCALE_CLAIM = "locale";
 export const OPID_WOKA_NAME_POLICY: OpidWokaNamePolicy = "user_input";
 export const OPID_TAGS_CLAIM = "tags";
 export const DISABLE_ANONYMOUS = false;
+export const LOGIN_USERS = undefined;
+export const CODE_LOGIN_ENABLED = false;
 export const PROMETHEUS_AUTHORIZATION_TOKEN: string | undefined = undefined;
 export const PROMETHEUS_PORT = 0;
 export const ENABLE_CHAT = true;
@@ -134,6 +136,7 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     POSTHOG_API_KEY: undefined,
     POSTHOG_URL: undefined,
     DISABLE_ANONYMOUS,
+    CODE_LOGIN_ENABLED,
     ENABLE_OPENID: false,
     OPID_PROFILE_SCREEN_PROVIDER: undefined,
     OPID_WOKA_NAME_POLICY,

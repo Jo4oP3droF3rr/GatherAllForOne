@@ -10,6 +10,12 @@ const login: DeepPartial<Translation["login"]> = {
             tooLongError: "El nom és molt llarg",
             notValidError: "El nom no és vàlid",
         },
+        code: {
+            placeholder: "Introdueix el teu codi",
+            empty: "El codi és buit",
+            invalid: "Codi no vàlid",
+            tooManyAttempts: "Massa intents. Espera uns minuts i torna-ho a provar.",
+        },
     },
     terms: `Si continueu, esteu d'acord amb els nostres {links}.`,
     termsOfUse: "termes d'ús",

@@ -277,6 +277,12 @@ export const EnvironmentVariables = z.object({
     DISABLE_ANONYMOUS: BoolAsString.optional()
         .transform((val) => toBool(val, false))
         .describe("If true, anonymous users cannot access the platform. Defaults to false"),
+    LOGIN_USERS: z
+        .string()
+        .optional()
+        .describe(
+            'List of users allowed to log in with a personal code, in the form "code:Name;code:Name". When set, the name screen asks for the code instead, the name comes from this list and anonymous access is disabled.',
+        ),
     PROMETHEUS_AUTHORIZATION_TOKEN: z.string().optional().describe("The token to access the Prometheus metrics."),
     PROMETHEUS_PORT: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 0))

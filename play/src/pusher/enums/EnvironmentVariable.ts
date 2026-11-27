@@ -90,6 +90,10 @@ export const OPID_LOCALE_CLAIM = env.OPENID_LOCALE_CLAIM || env.OPID_LOCALE_CLAI
 export const OPID_WOKA_NAME_POLICY = env.OPENID_WOKA_NAME_POLICY || env.OPID_WOKA_NAME_POLICY || "user_input";
 export const OPID_TAGS_CLAIM = env.OPENID_TAGS_CLAIM || env.OPID_TAGS_CLAIM || "tags";
 export const DISABLE_ANONYMOUS: boolean = env.DISABLE_ANONYMOUS;
+export const LOGIN_USERS = env.LOGIN_USERS;
+// As soon as LOGIN_USERS is set (even with no valid entry), only the users of the list can enter: a typo in the
+// list must not open the platform to anonymous users.
+export const CODE_LOGIN_ENABLED = (env.LOGIN_USERS ?? "").trim() !== "";
 export const PROMETHEUS_AUTHORIZATION_TOKEN = env.PROMETHEUS_AUTHORIZATION_TOKEN;
 export const PROMETHEUS_PORT = env.PROMETHEUS_PORT === env.PUSHER_HTTP_PORT ? 0 : env.PROMETHEUS_PORT;
 export const ENABLE_CHAT: boolean = env.ENABLE_CHAT;
@@ -216,6 +220,7 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     POSTHOG_API_KEY: env.POSTHOG_API_KEY,
     POSTHOG_URL: env.POSTHOG_URL,
     DISABLE_ANONYMOUS,
+    CODE_LOGIN_ENABLED,
     ENABLE_OPENID: !!env.OPENID_CLIENT_ID || !!env.OPID_CLIENT_ID,
     OPID_PROFILE_SCREEN_PROVIDER: env.OPENID_PROFILE_SCREEN_PROVIDER || env.OPID_PROFILE_SCREEN_PROVIDER,
     OPID_WOKA_NAME_POLICY,

@@ -14,10 +14,11 @@ import { ADMIN_URL, DISABLE_ANONYMOUS, FRONT_URL, MATRIX_PUBLIC_URI, PUSHER_URL 
 import { adminService } from "../services/AdminService";
 import { desktopAuthService } from "../services/DesktopAuthService";
 import { desktopOidcTransactionService } from "../services/DesktopOidcTransactionService";
-import { validateQuery } from "../services/QueryValidator";
 import { VerifyDomainService } from "../services/verifyDomain/VerifyDomainService";
 import { matrixProvider } from "../services/MatrixProvider";
 import { getClientIpFromXForwardedFor } from "../services/ClientIp";
+import { checkCodeLoginUser, codeLoginService } from "../services/CodeLogin";
+import { validatePostQuery, validateQuery } from "../services/QueryValidator";
 import { BaseHttpController } from "./BaseHttpController";
 import { normalizeDesktopCallbackUrl } from "./DesktopCallbackUrl";
 
@@ -77,6 +78,7 @@ export class AuthenticateController extends BaseHttpController {
         this.matrixCallback();
         this.logoutCallback();
         this.anonymLogin();
+        this.codeLogin();
         this.profileCallback();
         this.logoutUser();
     }
@@ -269,6 +271,8 @@ export class AuthenticateController extends BaseHttpController {
             }
             try {
                 const authTokenData: AuthTokenData = await jwtTokenManager.verifyJWTToken(token, false);
+                // With the code login, the name comes from LOGIN_USERS (and the user must still be in the list)
+                const codeLoginUser = checkCodeLoginUser(authTokenData);
 
                 // Check the OpenID access token (renewing it if expired) before calling the admin, which uses it to
                 // identify the member
@@ -308,7 +312,7 @@ export class AuthenticateController extends BaseHttpController {
                     //get data with identifier and return token
                     res.json({
                         authToken: token,
-                        username,
+                        username: codeLoginUser?.name ?? username,
                         locale,
                         // TODO: replace ... with each property
                         ...resUserData,
@@ -650,7 +654,7 @@ export class AuthenticateController extends BaseHttpController {
         this.app.post("/anonymLogin", async (req, res) => {
             debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
             // We refuse the anonymous login if the anonymous mode is disabled AND that the default woka name is not set
-            if (DISABLE_ANONYMOUS) {
+            if (DISABLE_ANONYMOUS || codeLoginService.isEnabled) {
                 res.status(403).send("");
                 return;
             } else {
@@ -662,6 +666,66 @@ export class AuthenticateController extends BaseHttpController {
                 });
                 return;
             }
+        });
+    }
+
+    /**
+     * @openapi
+     * /codeLogin:
+     *   post:
+     *     description: Logs in a user of the LOGIN_USERS list with their personal code.
+     *     requestBody:
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             properties:
+     *               code:
+     *                 type: string
+     *     responses:
+     *       200:
+     *         description: The JWT token and the name of the user
+     *       401:
+     *         description: Unknown code
+     *       403:
+     *         description: The code login is disabled (LOGIN_USERS is not set)
+     *       429:
+     *         description: Too many failed attempts from this IP address
+     */
+    private codeLogin(): void {
+        this.app.post("/codeLogin", async (req, res) => {
+            debug(`AuthenticateController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
+            if (!codeLoginService.isEnabled) {
+                res.status(403).send("");
+                return;
+            }
+
+            const ip = getClientIpFromXForwardedFor(req.header("x-forwarded-for")) || req.ip || "unknown";
+            if (codeLoginService.isBlocked(ip)) {
+                res.status(429).send("Too many attempts");
+                return;
+            }
+
+            const body = validatePostQuery(req, res, z.object({ code: z.string().max(200) }));
+            if (body === undefined) {
+                return;
+            }
+
+            const user = codeLoginService.findByCode(body.code);
+            if (!user) {
+                codeLoginService.registerFailedAttempt(ip);
+                res.status(401).send("Invalid code");
+                return;
+            }
+            codeLoginService.clearFailedAttempts(ip);
+
+            const authToken = await jwtTokenManager.createAuthToken(user.identifier, undefined, user.name);
+            res.json({
+                authToken,
+                userUuid: user.identifier,
+                username: user.name,
+            });
+            return;
         });
     }
 

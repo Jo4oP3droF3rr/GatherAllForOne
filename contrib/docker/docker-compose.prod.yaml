@@ -50,6 +50,7 @@ services:
       - MAX_PER_GROUP
       - MAX_USERNAME_LENGTH
       - DISABLE_ANONYMOUS
+      - LOGIN_USERS
       - SECRET_KEY
       - API_URL=back:50051
       - FRONT_URL=/

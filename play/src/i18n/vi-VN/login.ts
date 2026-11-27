@@ -9,6 +9,12 @@ const login: DeepPartial<Translation["login"]> = {
             tooLongError: "Tên quá dài",
             notValidError: "Định dạng tên không hợp lệ",
         },
+        code: {
+            placeholder: "Nhập mã của bạn",
+            empty: "Mã đang trống",
+            invalid: "Mã không hợp lệ",
+            tooManyAttempts: "Quá nhiều lần thử. Vui lòng đợi vài phút rồi thử lại.",
+        },
     },
     genericError: "Đã xảy ra lỗi",
     terms: "Bằng việc tiếp tục, bạn đồng ý với {links} của chúng tôi.",
